@@ -49,6 +49,27 @@ def init():
                 if course:
                     c.execute('INSERT INTO grades(student_id,course_id,score) VALUES(?,?,?)',(sid,course['id'],score))
             c.execute('INSERT INTO migrations(version) VALUES(1)')
+        if not c.execute('SELECT 1 FROM migrations WHERE version=2').fetchone():
+            courses = [
+                ('高等数学','周老师',4,[85,91,96,78,88,72,94]),
+                ('大学英语','吴老师',3,[90,84,93,86,95,80,89]),
+                ('Python 程序设计','李老师',4,[96,89,98,83,87,79,95]),
+                ('数据结构与算法','张老师',4,[88,92,95,76,84,68,97]),
+                ('计算机网络','王老师',3,[91,86,94,82,90,75,92]),
+                ('操作系统','刘老师',3,[87,90,96,79,85,73,93]),
+                ('软件工程导论','孙老师',2,[94,88,97,85,92,81,90]),
+                ('Web 应用开发','郑老师',3,[95,93,98,87,89,82,96]),
+                ('大学体育','黄老师',1,[86,95,88,92,84,97,90]),
+                ('线性代数','何老师',3,[89,87,94,74,86,58,95]),
+                ('信息安全基础','徐老师',2,[92,85,96,81,88,77,94])]
+            for name,teacher,credits,scores in courses:
+                c.execute('INSERT OR IGNORE INTO courses(name,teacher,credits) VALUES(?,?,?)',(name,teacher,credits))
+                cid=c.execute('SELECT id FROM courses WHERE name=?',(name,)).fetchone()['id']
+                for index,score in enumerate(scores,1):
+                    student=c.execute('SELECT id FROM students WHERE number=?',('202600%02d'%index,)).fetchone()
+                    if student:
+                        c.execute('INSERT OR IGNORE INTO grades(student_id,course_id,score) VALUES(?,?,?)',(student['id'],cid,score))
+            c.execute('INSERT INTO migrations(version) VALUES(2)')
 
 class Handler(BaseHTTPRequestHandler):
     def send(self,data,status=200):
@@ -102,3 +123,4 @@ class Handler(BaseHTTPRequestHandler):
 
 if __name__=='__main__':
     init();print('学生信息管理系统：http://127.0.0.1:8000');ThreadingHTTPServer(('127.0.0.1',8000),Handler).serve_forever()
+
